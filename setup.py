@@ -8,6 +8,12 @@ setup(
     author='Przemek Sekula',
     author_email='przemeksekula@gmail.com',
     packages=['gym_walking', 'gym_walking.envs'],
+    package_data={
+        "gym-waking": [
+            "envs/img/*.png",
+        ]
+    },    
+    
     license='MIT License',
     install_requires=['gym', 'pygame'],
 )
