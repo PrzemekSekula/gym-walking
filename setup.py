@@ -7,9 +7,12 @@ setup(
     url='https://github.com/PrzemekSekula/gym-walking.git',
     author='Przemek Sekula',
     author_email='przemeksekula@gmail.com',
-    packages=['gym_walking'],
+    packages=['gym_walking', 'gym_walking.envs'],
     package_data={
         "gym-waking": [
+            "envs/img/*.png",
+        ]
+        "gym-wakin.envs": [
             "envs/img/*.png",
         ]
     },    
