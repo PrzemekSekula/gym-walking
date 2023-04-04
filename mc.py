@@ -30,29 +30,56 @@ env = gym.make('Walking5-v0')
 pi = lambda x: np.random.randint(2) # uniform random policy
 
 def mc(pi, env, gamma=1.0, n_episodes=10, render=True):
+    
+    # State values
     V = np.array([0] + [0.5] * (env.observation_space.n - 2) + [0])
-    n_visited = np.array([0] * env.observation_space.n)
+    
+    # How many times the state value was updated. We set the initial
+    # state values to 0.5, so let's assume that we have already visited
+    # each state once. This is not true, but it is a good approximation
+    n_visited = np.array([1] * env.observation_space.n)
 
     for t in range(n_episodes):
         state, info = env.reset()
-        visited_states = [state]
-        rewards = [0]
+        n_visited[state] += 1
+        terminal = False
+        
+        # All visited states in this episode (except terminal state)
+        visited_states = []
+        
+       
+        # Rewards for each state-action pair
+        # It this case reward can be positive only for the last state
+        # thus there is no need to store it. Yet, we keep it for the 
+        # sake of generality
+        rewards = [] 
         
         if render:
             env.render(V)
-        terminal = False
         while not terminal:
+            visited_states.append(state)
             action = pi(state)
             next_state, reward, terminal, truncated, info = env.step(action)
+            rewards.append(reward)
+            
             state = next_state
-            visited_states.append(state)
+            n_visited[state] += 1
+            
             if render:
                 env.render(V)
-                
-        for state in visited_states[::-1]:
+        
+        
+        # Now the episode is done. Let's update the state values        
+        G = 0
+        for state, reward in zip (visited_states[::-1], rewards[::-1]):
             n_visited[state] += 1
-            print (V[state], reward, n_visited[state])
-            V[state] += gamma * (reward - V[state]) / n_visited[state]
+            G = gamma * G + reward
+            V[state] += (G - V[state]) / n_visited[state]
+            
+        # Note: In this code  we only update the state values after 
+        # each episode. The policy remains unchanged. If you want to
+        # implement e-solf Monte Carlo you should also update the 
+        # policy after each episode.
             
     return V
 
