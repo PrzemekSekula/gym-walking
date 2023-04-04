@@ -56,6 +56,9 @@ def mc(pi, env, gamma=1.0, n_episodes=10, render=True):
         
         if render:
             env.render(V)
+            
+        import time
+        time.sleep(10)
         while not terminal:
             visited_states.append(state)
             action = pi(state)
