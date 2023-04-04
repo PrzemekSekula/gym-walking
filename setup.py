@@ -12,7 +12,7 @@ setup(
         "gym-waking": [
             "envs/img/*.png",
         ]
-        "gym-wakin.envs": [
+        "gym-waking.envs": [
             "envs/img/*.png",
         ]
     },    
