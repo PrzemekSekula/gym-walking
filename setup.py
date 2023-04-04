@@ -9,7 +9,7 @@ setup(
     author_email='przemeksekula@gmail.com',
     packages=['gym_walking', 'gym_walking.envs'],
     package_data={
-        "gym-walking": [
+        "gym_walking": [
             "envs/img/*.png",
         ]
     },    
