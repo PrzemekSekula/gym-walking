@@ -34,7 +34,7 @@ State (position of the robot). Integer number. The left-most (terminal) state is
 
 ```bash
 git clone https://github.com/PrzemekSekula/gym-walking.git
-cd gym-walk
+cd gym-walking
 pip install .
 ```
 
