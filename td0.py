@@ -8,7 +8,7 @@ Parameters:
 """
 
 import argparse
-import gym
+import gymnasium as gym
 import numpy as np
 import gym_walking
 
@@ -71,7 +71,7 @@ def td_0(pi, env, gamma=1.0, alpha=0.05, n_episodes=10, render=True):
     for t in range(n_episodes):
         state, info = env.reset()
         if render:
-            env.render(V)
+            env.unwrapped.render(V)
         terminal = False
         while not terminal:
             action = pi(state)
@@ -83,7 +83,7 @@ def td_0(pi, env, gamma=1.0, alpha=0.05, n_episodes=10, render=True):
             V[state] += alpha * td_error
             state = next_state
             if render:
-                env.render(V)
+                env.unwrapped.render(V)
 
     return V
 

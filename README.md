@@ -23,12 +23,13 @@ State (position of the robot). Integer number. The left-most (terminal) state is
 - `env = gym.make(Walking9-v0)` - 9 non-terminal (11 total) states
 
 ## Rendering
-`env.render()` works as usual, but you may also use additional arguments to make rendering look more informative. `env.render(state_values)` will display state values on each non-terminal state. See `mc.py` or `td0.py` examples.
+`env.render()` works as usual, but you may also use additional arguments to make rendering look more informative. `env.render(state_values)` will display state values on each non-terminal state. See `mc.py` or `td0.py` examples. Additioanlly, `env.render(state_values, state_values_bottom)` renders two similar environments with different state values. This is used to show the difference between Monte Carlo and TD(0).
 
 ## Repository content 
 - `gym_walking` - Environment
 - `mc.py` - example. Learns state value functions using Monte Carlo method and random uniform policy.
 - `td0.py` - example. Learns state value functions using TD(0) method and random uniform policy.
+- `td0_mc.py` - example. Learns state value functions using both Monte Carlo and TD(0) at the same time. Also renders the results for both methods at the same time, to demonstrate the differences.
 
 ## Installation:
 

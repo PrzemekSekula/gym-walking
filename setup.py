@@ -15,5 +15,5 @@ setup(
     },    
     
     license='MIT License',
-    install_requires=['gym', 'pygame'],
+    install_requires=['gymnasium', 'pygame'],
 )
