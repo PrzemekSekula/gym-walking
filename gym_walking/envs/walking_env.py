@@ -2,9 +2,9 @@ import sys
 from os import path
 import numpy as np
 
-import gym
+import gymnasium as gym
 
-from gym.error import DependencyNotInstalled
+from gymnasium.error import DependencyNotInstalled
 
 from typing import Optional
 
@@ -90,26 +90,37 @@ class WalkingEnv(gym.Env):
         return self.state, self.info
     
     
-    def render(self, state_values = None):
-        return self._render_gui(self.render_mode, state_values)
+    def render(self, state_values = None, state_values_bottom = None):
+        return self._render_gui(
+            self.render_mode, state_values, state_values_bottom
+        )
     
     
-    def _render_gui(self, mode, state_values = None):
+    def _render_gui(self, mode, state_values = None, state_values_bottom = None):
         try:
             import pygame
         except ImportError:
             raise DependencyNotInstalled(
                 "pygame is not installed, run `pip install gym[toy_text]`"
             )
-        if self.window_surface is None:
-            pygame.init()
-
+        stacked = state_values is not None and state_values_bottom is not None
+        layers = [state_values]
+        if stacked:
+            layers.append(state_values_bottom)
+        pygame.init()
+        base_height = 2 * self.cell_size[0]
+        target_size = (
+            self.n_states * self.cell_size[0],
+            base_height * len(layers),
+        )
+        if self.window_surface is None or self.window_surface.get_size() != target_size:
             if mode == "human":
                 pygame.display.init()
                 pygame.display.set_caption("WalkingEnv")
-                self.window_surface = pygame.display.set_mode(self.window_size)
+                self.window_surface = pygame.display.set_mode(target_size)
             else:  # rgb_array
-                self.window_surface = pygame.Surface(self.window_size)
+                self.window_surface = pygame.Surface(target_size)
+            self.window_size = target_size
         if self.clock is None:
             self.clock = pygame.time.Clock()
             
@@ -141,41 +152,49 @@ class WalkingEnv(gym.Env):
                 pygame.image.load(file_name), self.cell_size
             )   
 
-        for row in range(self.n_states):
-            
-            col = 0
-            pos = (row * self.cell_size[1], col * self.cell_size[0])
-            
-            self.window_surface.blit(self.character_bg_img, pos)
-            if row == self.state:
-                player_pos = (pos[0], pos[1])
-                self.window_surface.blit(self.character_img, player_pos)
+        def normalized_values(values):
+            if values is None:
+                return None
+            arr = np.array(values)
+            if len(arr) == self.n_states - 2:
+                arr = np.array([0] + list(arr) + [0])
+            if len(arr) != self.n_states:
+                raise ValueError(
+                    f"state_values has {len(arr)} elements, {self.n_states} was expected."
+                )
+            return arr
+
+        normalized_layers = [normalized_values(vals) for vals in layers]
+
+        for layer_idx, layer_values in enumerate(normalized_layers):
+            layer_offset = layer_idx * base_height
+            for row in range(self.n_states):
                 
-            col = 1
-            pos = (row * self.cell_size[1], col * self.cell_size[0])
-            if (row == 0) or (row == self.n_states - 1):
-                self.window_surface.blit(self.terminal_bg_img, pos)
-            else:
-                self.window_surface.blit(self.state_bg_img, pos)
-                if state_values is not None:
-                    if len(state_values) == self.n_states - 2:
-                        state_values = np.array([0] + list(state_values) + [0])
-                    else:
-                        state_values = np.array(state_values)
-                        
-                    if len(state_values) != self.n_states:
-                        raise ValueError(f"state_values has {len_state_values} elements, {self.n_states} was expected.")
+                col = 0
+                pos = (row * self.cell_size[1], layer_offset + col * self.cell_size[0])
+                
+                self.window_surface.blit(self.character_bg_img, pos)
+                if row == self.state:
+                    player_pos = (pos[0], pos[1])
+                    self.window_surface.blit(self.character_img, player_pos)
+                    
+                col = 1
+                pos = (row * self.cell_size[1], layer_offset + col * self.cell_size[0])
+                if (row == 0) or (row == self.n_states - 1):
+                    self.window_surface.blit(self.terminal_bg_img, pos)
+                else:
+                    self.window_surface.blit(self.state_bg_img, pos)
+                    if layer_values is not None:
+                        text = str(np.round(layer_values[row], 3))
 
-                    text = str(np.round(state_values[row], 3))
-
-                    text_color = (255, 255, 255)
-                    img = self.text_font.render(text, True, text_color)
-                    self.window_surface.blit(
-                        img, (
-                        int(pos[0] + self.cell_size[0] / 2 - img.get_width() / 2),
-                        int(pos[1] + self.cell_size[1] / 2 - img.get_height() / 2)
+                        text_color = (255, 255, 255)
+                        img = self.text_font.render(text, True, text_color)
+                        self.window_surface.blit(
+                            img, (
+                            int(pos[0] + self.cell_size[0] / 2 - img.get_width() / 2),
+                            int(pos[1] + self.cell_size[1] / 2 - img.get_height() / 2)
+                            )
                         )
-                    )
     
 
         if mode == "human":
