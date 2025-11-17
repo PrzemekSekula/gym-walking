@@ -40,8 +40,14 @@ parser.add_argument('-r', '--render',
                     help='Whether to render or not. Default: True'
                     )
 
+parser.add_argument('-s', '--size',
+                    type=int,
+                    default=5,
+                    help='Size of the environment (number of non-terminal '
+                    'states). Default: 5. Possible values: 5, 7, 9'
+                    )
 
-env = gym.make('Walking5-v0')
+
 
 def pi(state): 
     """Uniform random policy
@@ -54,7 +60,14 @@ def pi(state):
     return np.random.randint(2)  # uniform random policy
 
 
-def td0_mc(pi, env, gamma=1.0, alpha=0.05, n_episodes=10, render=True):
+def td0_mc(pi, size, gamma=1.0, alpha=0.05, n_episodes=10, render=True):
+    if size == 5:
+        env = gym.make('Walking5-v0')
+    elif size == 7:
+        env = gym.make('Walking7-v0')
+    else:
+        env = gym.make('Walking9-v0')
+
     """TD(0) algorithm
     Args:
         pi (func): policy to follow
@@ -108,11 +121,23 @@ def td0_mc(pi, env, gamma=1.0, alpha=0.05, n_episodes=10, render=True):
 if __name__ == "__main__":
     args = parser.parse_args()
     V_td0, V_mc = td0_mc(
-        pi, env,
+        pi, args.size,
         gamma=args.gamma,
         alpha=args.alpha,
         n_episodes=args.episodes,
         render=args.render
     )
+    real_values = np.round(np.array([x / (args.size+1) for x in range(args.size+2)]), 3)
+    real_values[len(real_values) - 1] = 0
+    print(f'Real state values:                  {real_values}')
+    print ('')
     print(f'Final state values for TD(0):       {np.round(V_td0, 3)}')
     print(f'Final state values for Monte Carlo: {np.round(V_mc, 3)}')
+    print ('')
+    print(f'TD(0) and real values difference:   {np.round(V_td0 - real_values, 3)}')
+    print(f'MC and real values difference:      {np.round(V_mc - real_values, 3)}')
+    print ('')
+    print (f'TD(0) and real values avg diff.:   ' \
+        f'{np.sum(np.abs(V_td0 - real_values))/(len(real_values)-2):.3f}')
+    print (f'MC and real values avg diff.:      ' \
+        f'{np.sum(np.abs(V_mc - real_values))/(len(real_values)-2):.3f}')
