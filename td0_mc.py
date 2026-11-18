@@ -5,7 +5,7 @@ Parameters:
     -g, --gamma (float): Gamma parameter for td target formula. Default: 1.0
     -a, --alpha (float): Alpha parameter for td target formula. Default: 0.05
     -r, --render (bool): Whether to render or not. Default: True
-Note - the main purpose of this script is to show the difference between TD(0) 
+Note - the main purpose of this script is to show the difference between TD(0)
 and Monte Carlo methods.
 """
 
@@ -13,6 +13,7 @@ import argparse
 import gymnasium as gym
 import numpy as np
 import gym_walking
+import pygame
 
 parser = argparse.ArgumentParser(description='Runs TD(0) and Monte Carlo on Walking5-v0.')
 
@@ -49,7 +50,7 @@ parser.add_argument('-s', '--size',
 
 
 
-def pi(state): 
+def pi(state):
     """Uniform random policy
     Args:
         state (any): state of the environment. Useful in a general case,
@@ -58,6 +59,22 @@ def pi(state):
         int: Action to take (0 or 1)
     """
     return np.random.randint(2)  # uniform random policy
+
+
+def render_with_pause(env, V_td0, V_mc):
+    env.unwrapped.render(V_td0, V_mc)
+
+    paused = False
+    while True:
+        event = pygame.event.wait() if paused else pygame.event.poll()
+
+        if event.type == pygame.NOEVENT:
+            return
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            raise SystemExit
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            paused = not paused
 
 
 def td0_mc(pi, size, gamma=1.0, alpha=0.05, n_episodes=10, render=True):
@@ -85,14 +102,14 @@ def td0_mc(pi, size, gamma=1.0, alpha=0.05, n_episodes=10, render=True):
     V_td0 = np.array([0] + [0.5] * (env.observation_space.n - 2) + [0])
     V_mc = np.array([0] + [0.5] * (env.observation_space.n - 2) + [0])
 
-    n_visited = np.array([1] * env.observation_space.n)    
+    n_visited = np.array([1] * env.observation_space.n)
     for t in range(n_episodes):
         visited_states = []
         rewards = []
         state, info = env.reset()
         n_visited[state] += 1
         if render:
-            env.unwrapped.render(V_td0, V_mc)
+            render_with_pause(env, V_td0, V_mc)
         terminal = False
         while not terminal:
             visited_states.append(state)
@@ -106,9 +123,9 @@ def td0_mc(pi, size, gamma=1.0, alpha=0.05, n_episodes=10, render=True):
             V_td0[state] += alpha * td_error
             state = next_state
             if render:
-                env.unwrapped.render(V_td0, V_mc)
+                render_with_pause(env, V_td0, V_mc)
 
-        # Now the episode is done. Let's update the state values        
+        # Now the episode is done. Let's update the state values
         G = 0
         for state, reward in zip (visited_states[::-1], rewards[::-1]):
             n_visited[state] += 1
